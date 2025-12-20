@@ -6,7 +6,7 @@ add_executable(${PROJECT_NAME}
   main.c
   utils.c
   graph.c
-  deque.c
+  queue.c
 )
 set_target_properties(${PROJECT_NAME}
   PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

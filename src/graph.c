@@ -1,17 +1,24 @@
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "graph.h"
+#include "queue.h"
+
+_Static_assert(1ull << sizeof(GraphNodeIdx) * CHAR_BIT >= GRAPH_SIZE);
+_Static_assert(1ull << sizeof(GraphEdgeIdx) * CHAR_BIT >= GRAPH_SIZE);
 
 void graphInit(struct Graph *graph)
 {
+	_Static_assert(1ull << sizeof(graph->usedCount) * 8 >= GRAPH_SIZE);
+
 	assert(graph != nullptr);
 
 	/* Since graphs are allocated in global space, memory is already
 	 * initialized to zero */
 
-	size_t limit = sizeof(graph->nodes.head) / sizeof(EdgeIdx) - 1;
+	size_t limit = sizeof(graph->nodes.head) / sizeof(GraphEdgeIdx) - 1;
 	for (size_t i = 1; i < limit; i++) {
 		graph->edges.nextEdge[i] = i + 1;
 	}
@@ -19,7 +26,7 @@ void graphInit(struct Graph *graph)
 	graph->freeListHead = 1;
 }
 
-void graphInsertEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
+void graphInsertEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
 	assert(graph != nullptr);
 	assert(from > 0 && from < GRAPH_SIZE);
@@ -31,10 +38,10 @@ void graphInsertEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
 		return;
 	}
 
-	EdgeIdx freeHead = graph->freeListHead;
+	GraphEdgeIdx freeHead = graph->freeListHead;
 	graph->freeListHead = graph->edges.nextEdge[freeHead];
 
-	EdgeIdx fromHead = graph->nodes.head[from];
+	GraphEdgeIdx fromHead = graph->nodes.head[from];
 	graph->nodes.head[from] = freeHead;
 	graph->edges.target[freeHead] = to;
 	graph->edges.nextEdge[freeHead] = fromHead;
@@ -42,39 +49,40 @@ void graphInsertEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
 	graph->usedCount += 1;
 }
 
-void graphDeleteNode(struct Graph *graph, NodeIdx node)
+void graphDeleteNode(struct Graph *graph, GraphNodeIdx node)
 {
 	assert(graph != nullptr);
 	assert(node > 0 && node < GRAPH_SIZE);
 
 	struct GraphIterator iter = graphGetNeighbors(graph, node);
-	NodeIdx linked = 0;
+	GraphNodeIdx linked = 0;
 	while (graphIteratorNext(&iter, &linked)) {
 		graphDeleteEdge(graph, node, linked);
 	}
 
-	for (NodeIdx i = 1; i < GRAPH_SIZE; i++) {
+	for (GraphNodeIdx i = 1; i < GRAPH_SIZE; i++) {
 		if (graph->nodes.head[i] == 0) {
 			continue;
 		}
 
-		while (graphDeleteEdge(graph, i, node));
+		while (graphDeleteEdge(graph, i, node))
+			;
 	}
 
 	graph->nodes.head[node] = 0;
 }
 
-bool graphDeleteEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
+bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
 	assert(graph != nullptr);
 	assert(from > 0 && from < GRAPH_SIZE);
 	assert(to > 0 && to < GRAPH_SIZE);
 
-	EdgeIdx edge = graph->nodes.head[from];
-	EdgeIdx start = edge;
-	EdgeIdx prev = 0;
+	GraphEdgeIdx edge = graph->nodes.head[from];
+	GraphEdgeIdx start = edge;
+	GraphEdgeIdx prev = 0;
 
-	for (NodeIdx i = 0; edge != 0 && i < GRAPH_SIZE; i++) {
+	for (GraphNodeIdx i = 0; edge != 0 && i < GRAPH_SIZE; i++) {
 		if (graph->edges.target[edge] != to) {
 			assert(i == 0 || edge != start);
 			prev = edge;
@@ -85,8 +93,8 @@ bool graphDeleteEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
 		if (prev == 0) {
 			graph->nodes.head[from] = graph->edges.nextEdge[edge];
 		} else {
-			graph->edges.nextEdge[prev]
-				= graph->edges.nextEdge[edge];
+			graph->edges.nextEdge[prev] =
+				graph->edges.nextEdge[edge];
 		}
 
 		graph->edges.nextEdge[edge] = graph->freeListHead;
@@ -98,14 +106,14 @@ bool graphDeleteEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
 	return false;
 }
 
-bool graphHasEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
+bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
 	assert(graph != nullptr);
 	assert(from > 0 && from < GRAPH_SIZE);
 	assert(to > 0 && to < GRAPH_SIZE);
 
 	struct GraphIterator iter = graphGetNeighbors(graph, from);
-	NodeIdx linked = 0;
+	GraphNodeIdx linked = 0;
 	while (graphIteratorNext(&iter, &linked)) {
 		if (linked == to) {
 			return true;
@@ -115,7 +123,8 @@ bool graphHasEdge(struct Graph *graph, NodeIdx from, NodeIdx to)
 	return false;
 }
 
-struct GraphIterator graphGetNeighbors(struct Graph *graph, NodeIdx node)
+struct GraphIterator graphGetNeighbors(const struct Graph *graph,
+				       GraphNodeIdx node)
 {
 	assert(graph != nullptr);
 	assert(node > 0 && node < GRAPH_SIZE);
@@ -128,7 +137,7 @@ struct GraphIterator graphGetNeighbors(struct Graph *graph, NodeIdx node)
 	return iter;
 }
 
-bool graphIteratorNext(struct GraphIterator *iter, NodeIdx *out)
+bool graphIteratorNext(struct GraphIterator *iter, GraphNodeIdx *out)
 {
 	assert(iter->graph != nullptr);
 	assert(out != nullptr);
@@ -143,4 +152,89 @@ bool graphIteratorNext(struct GraphIterator *iter, NodeIdx *out)
 	assert(*out != 0);
 
 	return true;
+}
+
+static void graphVisitNeighbors(const struct Graph *graph, struct Queue *queue,
+			     GraphNodeIdx current,
+			     GraphNodeIdx parent[GRAPH_SIZE])
+{
+	struct GraphIterator iter = graphGetNeighbors(graph, current);
+	GraphNodeIdx neighbor;
+	while (graphIteratorNext(&iter, &neighbor)) {
+		if (parent[neighbor] == 0) {
+			parent[neighbor] = current;
+			queuePush(queue, neighbor);
+		}
+	}
+}
+
+static void reversePath(GraphNodeIdx outPath[GRAPH_SIZE], int outPathSize)
+{
+	for (int i = 0; i < outPathSize / 2; i++) {
+		GraphNodeIdx temp = outPath[i];
+		outPath[i] = outPath[outPathSize - 1 - i];
+		outPath[outPathSize - 1 - i] = temp;
+	}
+}
+
+static int reconstructPath(GraphNodeIdx parent[GRAPH_SIZE],
+                           GraphNodeIdx start, GraphNodeIdx goal,
+                           GraphNodeIdx outPath[GRAPH_SIZE])
+{
+	int size = 0;
+	GraphNodeIdx node = goal;
+	while (node != start && size < GRAPH_SIZE) {
+		outPath[size] = node;
+		size++;
+		node = parent[node];
+	}
+
+	/* Bounds checking */
+	assert(node == start);
+	if (unlikely(node != start)) {
+		return 0;
+	}
+
+	outPath[size] = start;
+	size++;
+
+	reversePath(outPath, size);
+
+	return size;
+}
+
+bool graphShortestPath(const struct Graph *graph, GraphNodeIdx start,
+		       GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE],
+		       int *outPathSize)
+{
+	assert(graph != nullptr);
+	assert(start > 0 && start < GRAPH_SIZE);
+	assert(goal > 0 && goal < GRAPH_SIZE);
+	assert(outPath != nullptr);
+	assert(outPathSize != nullptr);
+
+	static GraphNodeIdx parent[GRAPH_SIZE];
+	memset(parent, 0, sizeof(parent));
+
+	struct Queue queue;
+	queueInit(&queue);
+
+	parent[start] = start;
+	queuePush(&queue, start);
+
+	while (!queueIsEmpty(&queue)) {
+		GraphNodeIdx current = queuePop(&queue);
+
+		if (current != goal) {
+			graphVisitNeighbors(graph, &queue, current, parent);
+			continue;
+		}
+
+		*outPathSize = reconstructPath(parent, start, goal, outPath);
+
+		return likely(*outPathSize > 0);
+	}
+
+	*outPathSize = 0;
+	return false;
 }

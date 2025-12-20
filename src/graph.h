@@ -1,39 +1,45 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdlib.h>
 
 #include "common.h"
 
 #define GRAPH_SIZE MAX_DEFAULT
 
-typedef uint16_t EdgeIdx;
-typedef uint16_t NodeIdx;
+typedef Idx GraphEdgeIdx;
+typedef Idx GraphNodeIdx;
 
 struct Graph {
 	struct {
-		EdgeIdx head[GRAPH_SIZE];
+		GraphEdgeIdx head[GRAPH_SIZE];
 	} nodes;
 
 	struct {
-		NodeIdx target[GRAPH_SIZE];
-		EdgeIdx nextEdge[GRAPH_SIZE];
+		GraphNodeIdx target[GRAPH_SIZE];
+		GraphEdgeIdx nextEdge[GRAPH_SIZE];
 	} edges;
 
-	EdgeIdx freeListHead;
+	GraphEdgeIdx freeListHead;
 	uint16_t usedCount;
 };
 
 struct GraphIterator {
-	struct Graph *graph;
-	int currentEdge;
+	const struct Graph *graph;
+	GraphEdgeIdx currentEdge;
 };
 
 void graphInit(struct Graph *graph);
-void graphInsertEdge(struct Graph *graph, NodeIdx from, NodeIdx to);
-void graphDeleteNode(struct Graph *graph, NodeIdx node);
-/* Return whether it was found */
-bool graphDeleteEdge(struct Graph *graph, NodeIdx from, NodeIdx to);
-bool graphHasEdge(struct Graph *graph, NodeIdx from, NodeIdx to);
-struct GraphIterator graphGetNeighbors(struct Graph *graph, NodeIdx node);
-bool graphIteratorNext(struct GraphIterator *iter, NodeIdx *out);
+void graphInsertEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to);
+void graphDeleteNode(struct Graph *graph, GraphNodeIdx node);
+/* Return whether it was found and deleted */
+bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to);
+bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from,
+		  GraphNodeIdx to);
+struct GraphIterator graphGetNeighbors(const struct Graph *graph,
+				       GraphNodeIdx node);
+bool graphIteratorNext(struct GraphIterator *iter, GraphNodeIdx *out);
+
+/* Path finding */
+bool graphShortestPath(const struct Graph *graph, GraphNodeIdx start,
+		       GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE],
+		       int *outPathSize);
