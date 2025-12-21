@@ -146,10 +146,12 @@ void testInsertEdgeFull()
 
 	for (GraphEdgeIdx i = 1; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i));
+		TEST_ASSERT_EQUAL_UINT(i, g->edges.count);
 	}
 
 	for (GraphEdgeIdx i = 1; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_FALSE(graphInsertEdge(g, i, i));
+		TEST_ASSERT_EQUAL_UINT(GRAPH_SIZE - 1, g->edges.count);
 	}
 }
 
@@ -162,16 +164,114 @@ void testIteration()
 	}
 
 	struct GraphIterator iter = graphGetNeighbors(g, 1);
-	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+	for (GraphEdgeIdx i = GRAPH_SIZE - 1; i > 1; i--) {
 		GraphNodeIdx next = 0;
 		TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
 		TEST_ASSERT_EQUAL_UINT(i, next);
 	}
 
-	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+	for (GraphEdgeIdx i = GRAPH_SIZE - 1; i > 1; i--) {
 		GraphNodeIdx next = 0;
 		TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
 		TEST_ASSERT_EQUAL_UINT(0, next);
+	}
+}
+
+void testIterationOnDeleted()
+{
+	struct Graph *g = newGraph();
+
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 1, 2));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 1, 3));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 1, 4));
+	TEST_ASSERT_TRUE(graphDeleteEdge(g, 1, 3));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 1, 5));
+
+	struct GraphIterator iter = graphGetNeighbors(g, 1);
+	GraphNodeIdx next = 0;
+
+	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
+	TEST_ASSERT_EQUAL_UINT(5, next);
+	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
+	TEST_ASSERT_EQUAL_UINT(4, next);
+	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
+	TEST_ASSERT_EQUAL_UINT(2, next);
+	TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
+}
+
+void testIterationWhileDeleting()
+{
+	struct Graph *g = newGraph();
+
+	for (int i = 2; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
+	}
+
+	struct GraphIterator iter = graphGetNeighbors(g, 1);
+	GraphNodeIdx next = 0;
+
+	for (int i = GRAPH_SIZE - 1; i > 1; i--) {
+		TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
+		TEST_ASSERT_EQUAL_UINT(i, next);
+		TEST_ASSERT_TRUE(graphDeleteEdge(g, 1, i));
+	}
+
+	TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
+}
+
+void testDetect()
+{
+	struct Graph *g = newGraph();
+
+	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
+		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
+	}
+
+	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
+	}
+}
+
+void testDetectAfterDelete()
+{
+	struct Graph *g = newGraph();
+
+	for (int i = 0; i < 10; i++) {
+		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+			TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
+			TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
+			TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
+		}
+
+		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+			TEST_ASSERT_TRUE(graphDeleteEdge(g, 1, i));
+			TEST_ASSERT_FALSE(graphHasEdge(g, 1, i));
+			TEST_ASSERT_EQUAL_UINT(GRAPH_SIZE - 1 - i,
+					       g->edges.count);
+		}
+
+		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+			TEST_ASSERT_FALSE(graphHasEdge(g, 1, i));
+		}
+	}
+}
+
+void testDeleteLastToFirst()
+{
+	struct Graph *g = newGraph();
+
+	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
+		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
+		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
+	}
+
+	/* TODO: go from GRAPH_SIZE to 1 */
+	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
+		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
+		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
 	}
 }
 
@@ -192,24 +292,29 @@ int main(void)
 
 	/* Iteration */
 	RUN_TEST(testIteration);
+	RUN_TEST(testIterationOnDeleted);
+	RUN_TEST(testIterationWhileDeleting);
+
+	/* Detect edges */
+	RUN_TEST(testDetect);
+	RUN_TEST(testDetectAfterDelete);
+
+	/* Deleting */
+	RUN_TEST(testDeleteLastToFirst);
 
 	/* TODO:
-	 * 1. delete edges sequentially first to last
 	 * 2. delete edges sequentially last to first
 	 * 3. delete edges in the middle
-	 * 4. delete edges hub in
 	 * 5. delete node hub out
 	 * 6. delete node hub in
 	 * 7. delete node no connections
 	 * 8. delete node with only connections to itself
 	 * 9. delete node with circular graph
 	 * 10. delete and add edges randomly in succession
-	 * 11. have a hub in, hub out, sequential, and test to detect edges
 	 * 11. find shortest paths on grid
 	 * 12. find shortest path on two disconnected nodes
 	 * 13. find shortest path in loop
-	 * 14. find shortest path on sequential
-	 * 15. iterate over sequence that has been deleted in the middle */
+	 * 14. find shortest path on sequential */
 
-	UNITY_END();
+	return UNITY_END();
 }
