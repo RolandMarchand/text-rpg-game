@@ -257,21 +257,75 @@ void testDetectAfterDelete()
 	}
 }
 
-void testDeleteLastToFirst()
+void testDeleteNoEdge()
 {
 	struct Graph *g = newGraph();
 
-	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
-		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
-		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
-		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
-	}
+	GraphEdgeIdx expectedFreeHead = g->edges.freeListHead;
+	TEST_ASSERT_EQUAL_UINT(0, g->edges.count);
 
-	/* TODO: go from GRAPH_SIZE to 1 */
-	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
-		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
-		TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
-		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
+	for (int i = 1; i < GRAPH_SIZE; i++) {
+		for (int j = 1; j < GRAPH_SIZE; j++) {
+			TEST_ASSERT_FALSE(graphDeleteEdge(g, i, j));
+			TEST_ASSERT_EQUAL_UINT(0, g->edges.count);
+			TEST_ASSERT_EQUAL(expectedFreeHead,
+					  g->edges.freeListHead);
+		}
+	}
+}
+
+void testInsertAndDelete()
+{
+	struct Graph *g = newGraph();
+	srand(0xDEADBEEF);
+
+	Idx expectedEdgeCount = 0;
+	char message[256] = { 0 };
+	for (int i = 0; i < 50 * GRAPH_SIZE; i++) {
+		TEST_ASSERT_LESS_THAN_UINT(GRAPH_SIZE, expectedEdgeCount);
+
+		/* Promote more deletion */
+		if (i % (GRAPH_SIZE * 3) == 0) {
+			srand(0xDEADBEEF);
+		}
+
+		GraphNodeIdx from = rand() % (GRAPH_SIZE - 1) + 1;
+		GraphNodeIdx to = rand() % (GRAPH_SIZE - 1) + 1;
+
+		if (!graphHasEdge(g, from, to)) { /* Insert */
+			if (g->edges.count >= 1023) {
+				continue;
+			}
+
+			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+					       g->edges.count);
+			TEST_ASSERT_FALSE(graphDeleteEdge(g, from, to));
+
+			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+					       g->edges.count);
+
+			TEST_ASSERT_LESS_OR_EQUAL(
+				256,
+				snprintf(
+					message, 256,
+					"iteration: %d, from: %d, to: %d, count: %d\n",
+					i, from, to, g->edges.count));
+			TEST_ASSERT_TRUE_MESSAGE(graphInsertEdge(g, from, to),
+						 message);
+
+			expectedEdgeCount++;
+			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+					       g->edges.count);
+		} else { /* Delete */
+			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+					       g->edges.count);
+
+			TEST_ASSERT_TRUE(graphDeleteEdge(g, from, to));
+
+			expectedEdgeCount--;
+			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+					       g->edges.count);
+		}
 	}
 }
 
@@ -299,17 +353,11 @@ int main(void)
 	RUN_TEST(testDetect);
 	RUN_TEST(testDetectAfterDelete);
 
-	/* Deleting */
-	RUN_TEST(testDeleteLastToFirst);
+	/* Deletion */
+	RUN_TEST(testDeleteNoEdge);
+	RUN_TEST(testInsertAndDelete);
 
 	/* TODO:
-	 * 2. delete edges sequentially last to first
-	 * 3. delete edges in the middle
-	 * 5. delete node hub out
-	 * 6. delete node hub in
-	 * 7. delete node no connections
-	 * 8. delete node with only connections to itself
-	 * 9. delete node with circular graph
 	 * 10. delete and add edges randomly in succession
 	 * 11. find shortest paths on grid
 	 * 12. find shortest path on two disconnected nodes

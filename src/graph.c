@@ -66,8 +66,7 @@ void graphDeleteNode(struct Graph *graph, GraphNodeIdx node)
 			continue;
 		}
 
-		while (graphDeleteEdge(graph, i, node))
-			;
+		while (graphDeleteEdge(graph, i, node));
 	}
 
 	graph->nodes.head[node] = 0;
