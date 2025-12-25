@@ -16,10 +16,10 @@ void setUp(void)
 
 void tearDown(void)
 {
-	obstack_free(&arena, nullptr);
+	obstack_free(&arena, NULL);
 }
 
-struct Graph *newGraph()
+struct Graph *newGraph(void)
 {
 	struct Graph *g = ALLOC(sizeof(struct Graph));
 	TEST_ASSERT_NOT_NULL(g);
@@ -38,7 +38,7 @@ void testInitInternal(struct Graph *g)
 	_Static_assert(sizeof(g->nodes.head) == sizeof(g->edges.target) &&
 		       sizeof(g->edges.target) == sizeof(g->edges.nextEdge) &&
 		       GRAPH_SIZE * sizeof(GraphEdgeIdx) ==
-			       sizeof(g->nodes.head));
+		       sizeof(g->nodes.head), "Inconsistent types in struct Graph");
 
 	TEST_ASSERT_EQUAL_MEMORY(buf, g->nodes.head, sizeof(g->nodes.head));
 	TEST_ASSERT_EQUAL_MEMORY(buf, g->edges.target, sizeof(g->edges.target));
@@ -54,7 +54,7 @@ void testInitInternal(struct Graph *g)
 	TEST_ASSERT_EQUAL_UINT16(0, g->edges.count);
 }
 
-void testInit()
+void testInit(void)
 {
 	struct Graph *g = ALLOC(sizeof(struct Graph));
 	TEST_ASSERT_NOT_NULL(g);
@@ -62,7 +62,7 @@ void testInit()
 	testInitInternal(g);
 }
 
-void testInitDirty()
+void testInitDirty(void)
 {
 	struct Graph *g = ALLOC(sizeof(struct Graph));
 	TEST_ASSERT_NOT_NULL(g);
@@ -70,7 +70,7 @@ void testInitDirty()
 	testInitInternal(g);
 }
 
-void testInsertEdgeList()
+void testInsertEdgeList(void)
 {
 	struct Graph *g = newGraph();
 
@@ -86,7 +86,7 @@ void testInsertEdgeList()
 	}
 }
 
-void testInsertEdgeHubOut()
+void testInsertEdgeHubOut(void)
 {
 	struct Graph *g = newGraph();
 
@@ -104,7 +104,7 @@ void testInsertEdgeHubOut()
 	}
 }
 
-void testInsertEdgeHubIn()
+void testInsertEdgeHubIn(void)
 {
 	struct Graph *g = newGraph();
 
@@ -122,7 +122,7 @@ void testInsertEdgeHubIn()
 	}
 }
 
-void testInsertEdgeLoop()
+void testInsertEdgeLoop(void)
 {
 	struct Graph *g = newGraph();
 
@@ -140,7 +140,7 @@ void testInsertEdgeLoop()
 	}
 }
 
-void testInsertEdgeFull()
+void testInsertEdgeFull(void)
 {
 	struct Graph *g = newGraph();
 
@@ -155,7 +155,7 @@ void testInsertEdgeFull()
 	}
 }
 
-void testIteration()
+void testIteration(void)
 {
 	struct Graph *g = newGraph();
 
@@ -177,7 +177,7 @@ void testIteration()
 	}
 }
 
-void testIterationOnDeleted()
+void testIterationOnDeleted(void)
 {
 	struct Graph *g = newGraph();
 
@@ -199,7 +199,7 @@ void testIterationOnDeleted()
 	TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
 }
 
-void testIterationWhileDeleting()
+void testIterationWhileDeleting(void)
 {
 	struct Graph *g = newGraph();
 
@@ -219,7 +219,7 @@ void testIterationWhileDeleting()
 	TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
 }
 
-void testDetect()
+void testDetect(void)
 {
 	struct Graph *g = newGraph();
 
@@ -233,7 +233,7 @@ void testDetect()
 	}
 }
 
-void testDetectAfterDelete()
+void testDetectAfterDelete(void)
 {
 	struct Graph *g = newGraph();
 
@@ -257,7 +257,7 @@ void testDetectAfterDelete()
 	}
 }
 
-void testDeleteNoEdge()
+void testDeleteNoEdge(void)
 {
 	struct Graph *g = newGraph();
 
@@ -274,7 +274,7 @@ void testDeleteNoEdge()
 	}
 }
 
-void testInsertAndDelete()
+void testInsertAndDelete(void)
 {
 	struct Graph *g = newGraph();
 	srand(0xDEADBEEF);

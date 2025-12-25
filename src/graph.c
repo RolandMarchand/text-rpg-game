@@ -6,15 +6,17 @@
 #include "graph.h"
 #include "queue.h"
 
-_Static_assert(1ull << sizeof(GraphNodeIdx) * CHAR_BIT >= GRAPH_SIZE);
-_Static_assert(1ull << sizeof(GraphEdgeIdx) * CHAR_BIT >= GRAPH_SIZE);
+_Static_assert(1ull << sizeof(GraphNodeIdx) * CHAR_BIT >= GRAPH_SIZE,
+	       "GraphNodeIdx's type cannot address all values of GRAPH_SIZE");
+_Static_assert(1ull << sizeof(GraphEdgeIdx) * CHAR_BIT >= GRAPH_SIZE,
+	       "GraphEdgeIdx's type cannot address all values of GRAPH_SIZE");
 
 void graphInit(struct Graph *graph)
 {
 	_Static_assert(1ull << sizeof(graph->edges.count) * CHAR_BIT >=
-		       GRAPH_SIZE);
+		       GRAPH_SIZE, "Graph.edges.count's type cannot address all values of GRAPH_SIZE");
 
-	assert(graph != nullptr);
+	assert(graph != NULL);
 
 	memset(graph, 0, sizeof(struct Graph));
 
@@ -28,7 +30,7 @@ void graphInit(struct Graph *graph)
 
 bool graphInsertEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(from > 0 && from < GRAPH_SIZE);
 	assert(to > 0 && to < GRAPH_SIZE);
 
@@ -52,7 +54,7 @@ bool graphInsertEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 
 void graphDeleteNode(struct Graph *graph, GraphNodeIdx node)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(node > 0 && node < GRAPH_SIZE);
 
 	struct GraphIterator iter = graphGetNeighbors(graph, node);
@@ -74,7 +76,7 @@ void graphDeleteNode(struct Graph *graph, GraphNodeIdx node)
 
 bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(from > 0 && from < GRAPH_SIZE);
 	assert(to > 0 && to < GRAPH_SIZE);
 
@@ -108,7 +110,7 @@ bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 
 bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(from > 0 && from < GRAPH_SIZE);
 	assert(to > 0 && to < GRAPH_SIZE);
 
@@ -126,7 +128,7 @@ bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 struct GraphIterator graphGetNeighbors(const struct Graph *graph,
 				       GraphNodeIdx node)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(node > 0 && node < GRAPH_SIZE);
 
 	struct GraphIterator iter = { 0 };
@@ -139,8 +141,8 @@ struct GraphIterator graphGetNeighbors(const struct Graph *graph,
 
 bool graphIteratorNext(struct GraphIterator *iter, GraphNodeIdx *out)
 {
-	assert(iter->graph != nullptr);
-	assert(out != nullptr);
+	assert(iter->graph != NULL);
+	assert(out != NULL);
 
 	if (iter->currentEdge == 0) {
 		return false;
@@ -206,11 +208,11 @@ bool graphShortestPath(const struct Graph *graph, GraphNodeIdx start,
 		       GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE],
 		       int *outPathSize)
 {
-	assert(graph != nullptr);
+	assert(graph != NULL);
 	assert(start > 0 && start < GRAPH_SIZE);
 	assert(goal > 0 && goal < GRAPH_SIZE);
-	assert(outPath != nullptr);
-	assert(outPathSize != nullptr);
+	assert(outPath != NULL);
+	assert(outPathSize != NULL);
 
 	static GraphNodeIdx parent[GRAPH_SIZE];
 	memset(parent, 0, sizeof(parent));

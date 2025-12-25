@@ -14,7 +14,7 @@ const char *err_to_string(Error err)
 int errorf(const char *restrict format, ...)
 {
 	va_list args;
-	va_start(args);
+	va_start(args, format);
 
 	int ret = vfprintf(stderr, format, args);
 

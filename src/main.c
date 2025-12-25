@@ -6,15 +6,15 @@
 
 struct obstack arena;
 
-Error init()
+Error init(void)
 {
 	obstack_init(&arena);
 	return ERR_OK;
 }
 
-Error cleanup()
+Error cleanup(void)
 {
-	obstack_free(&arena, nullptr);
+	obstack_free(&arena, NULL);
 	return ERR_OK;
 }
 
