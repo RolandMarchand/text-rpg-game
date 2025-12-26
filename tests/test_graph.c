@@ -36,9 +36,11 @@ void testInitInternal(struct Graph *g)
 	memset(buf, 0, GRAPH_SIZE * sizeof(GraphEdgeIdx));
 
 	_Static_assert(sizeof(g->nodes.head) == sizeof(g->edges.target) &&
-		       sizeof(g->edges.target) == sizeof(g->edges.nextEdge) &&
-		       GRAPH_SIZE * sizeof(GraphEdgeIdx) ==
-		       sizeof(g->nodes.head), "Inconsistent types in struct Graph");
+			       sizeof(g->edges.target) ==
+				       sizeof(g->edges.nextEdge) &&
+			       GRAPH_SIZE * sizeof(GraphEdgeIdx) ==
+				       sizeof(g->nodes.head),
+		       "Inconsistent types in struct Graph");
 
 	TEST_ASSERT_EQUAL_MEMORY(buf, g->nodes.head, sizeof(g->nodes.head));
 	TEST_ASSERT_EQUAL_MEMORY(buf, g->edges.target, sizeof(g->edges.target));
@@ -329,6 +331,49 @@ void testInsertAndDelete(void)
 	}
 }
 
+void testDeleteNode(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx toDelete = 2;
+
+	for (int i = 0; i < 100; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, toDelete));
+		TEST_ASSERT_TRUE(graphInsertEdge(g, toDelete, 1));
+		TEST_ASSERT_EQUAL((i + 1) * 2, g->edges.count);
+	}
+
+	graphDeleteNode(g, toDelete);
+	TEST_ASSERT_EQUAL(0, g->edges.count);
+	TEST_ASSERT_EQUAL(0, g->nodes.head[1]);
+	TEST_ASSERT_EQUAL(0, g->nodes.head[toDelete]);
+}
+
+void testDeleteNodeWithMultipleNeighbors(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx toDelete = 50;
+
+	for (int i = 1; i < 20; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, i, toDelete));
+	}
+
+	for (int i = 51; i < 70; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, toDelete, i));
+	}
+
+	int expectedCount = 19 + 19;
+	TEST_ASSERT_EQUAL(expectedCount, g->edges.count);
+
+	graphDeleteNode(g, toDelete);
+
+	TEST_ASSERT_EQUAL(0, g->edges.count);
+	TEST_ASSERT_EQUAL(0, g->nodes.head[toDelete]);
+
+	for (int i = 1; i < 20; i++) {
+		TEST_ASSERT_FALSE(graphHasEdge(g, i, toDelete));
+	}
+}
+
 void testShortestPathLinear(void)
 {
 	struct Graph *g = newGraph();
@@ -378,7 +423,6 @@ void testShortestPathThroughHub2(void)
 	_Static_assert(GRAPH_SIZE >= 100,
 		       "GRAPH_SIZE needs to be >= than 100 for this test");
 
-
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
 
 	for (int i = 3; i < 20; i++) {
@@ -403,7 +447,6 @@ void testShortestPathThroughHub2(void)
 
 	TEST_ASSERT_TRUE(graphInsertEdge(g, 70, goal));
 
-
 	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
 	int size = 0;
 
@@ -426,7 +469,6 @@ void testNoShortestPath(void)
 	const GraphNodeIdx goal = 200;
 	_Static_assert(GRAPH_SIZE >= 100,
 		       "GRAPH_SIZE needs to be >= than 100 for this test");
-
 
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
 
@@ -451,7 +493,6 @@ void testNoShortestPath(void)
 	}
 
 	/* TEST_ASSERT_TRUE(graphInsertEdge(g, 70, goal)); */
-
 
 	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
 	int size = 0;
@@ -528,6 +569,8 @@ int main(void)
 	/* Deletion */
 	RUN_TEST(testDeleteNoEdge);
 	RUN_TEST(testInsertAndDelete);
+	RUN_TEST(testDeleteNode);
+	RUN_TEST(testDeleteNodeWithMultipleNeighbors);
 
 	RUN_TEST(testShortestPathLinear);
 	RUN_TEST(testShortestPathThroughHub);
