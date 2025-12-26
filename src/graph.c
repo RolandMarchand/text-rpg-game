@@ -21,7 +21,7 @@ void graphInit(struct Graph *graph)
 	memset(graph, 0, sizeof(struct Graph));
 
 	size_t limit = sizeof(graph->nodes.head) / sizeof(GraphEdgeIdx) - 1;
-	for (size_t i = 1; i < limit; i++) {
+	for (GraphEdgeIdx i = 1; i < limit; i++) {
 		graph->edges.nextEdge[i] = i + 1;
 	}
 

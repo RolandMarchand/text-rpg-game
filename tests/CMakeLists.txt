@@ -22,5 +22,5 @@ add_test(NAME Queue COMMAND test_queue)
 add_custom_target(tests
   DEPENDS test_graph test_queue
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
-  COMMAND ctest -C $<CONFIG>
+  COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIG> --output-on-failure
 )

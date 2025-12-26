@@ -54,7 +54,7 @@ Idx queuePop(struct Queue *queue)
 	assert(queue != NULL);
 
 	if (queueIsEmpty(queue)) {
-		return -1;
+		return (Idx)-1;
 	}
 
 	Idx item = queue->items[queue->front];
@@ -67,7 +67,7 @@ Idx queuePeek(struct Queue *queue)
 	assert(queue != NULL);
 
 	if (queueIsEmpty(queue)) {
-		return -1;
+		return (Idx)-1;
 	}
 
 	return queue->items[queue->front];

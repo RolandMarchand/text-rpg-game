@@ -239,7 +239,7 @@ void testDetectAfterDelete(void)
 {
 	struct Graph *g = newGraph();
 
-	for (GraphNodeIdx i = 0; i < 10; i++) {
+	for (int loops = 0; loops < 10; loops++) {
 		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
 			TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
 			TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
