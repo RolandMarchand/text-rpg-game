@@ -329,6 +329,178 @@ void testInsertAndDelete(void)
 	}
 }
 
+void testShortestPathLinear(void)
+{
+	struct Graph *g = newGraph();
+	for (int i = 1; i < GRAPH_SIZE - 1; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i + 1));
+		GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+		int pathSize = 0;
+		TEST_ASSERT_TRUE(
+			graphShortestPath(g, 1, i + 1, path, &pathSize));
+		TEST_ASSERT_EQUAL(i + 1, pathSize);
+		for (int j = 0; j < pathSize; j++) {
+			TEST_ASSERT_EQUAL(j + 1, path[j]);
+		}
+	}
+}
+
+void testShortestPathThroughHub(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx start = 1;
+	const GraphNodeIdx hub = 2;
+	const GraphNodeIdx goal = 3;
+
+	TEST_ASSERT_TRUE(graphInsertEdge(g, start, hub));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, hub, goal));
+
+	for (int i = 3; i < GRAPH_SIZE - 3; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, hub, i));
+	}
+
+	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+	int size = 0;
+
+	TEST_ASSERT_TRUE(graphShortestPath(g, start, goal, path, &size));
+	TEST_ASSERT_EQUAL(3, size);
+	TEST_ASSERT_EQUAL(1, path[0]);
+	TEST_ASSERT_EQUAL(2, path[1]);
+	TEST_ASSERT_EQUAL(3, path[2]);
+	TEST_ASSERT_EQUAL(0, path[3]);
+}
+
+void testShortestPathThroughHub2(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx start = 1;
+	const GraphNodeIdx goal = 200;
+	_Static_assert(GRAPH_SIZE >= 100,
+		       "GRAPH_SIZE needs to be >= than 100 for this test");
+
+
+	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
+
+	for (int i = 3; i < 20; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 2, i));
+	}
+
+	for (int i = 20; i < 40; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 3, i));
+	}
+
+	for (int i = 40; i < 60; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 4, i));
+	}
+
+	for (int i = 60; i < 80; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 21, i));
+	}
+
+	for (int i = 80; i < 100; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 20, i));
+	}
+
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 70, goal));
+
+
+	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+	int size = 0;
+
+	TEST_ASSERT_TRUE(graphShortestPath(g, start, goal, path, &size));
+
+	TEST_ASSERT_EQUAL(6, size);
+	TEST_ASSERT_EQUAL(start, path[0]);
+	TEST_ASSERT_EQUAL(2, path[1]);
+	TEST_ASSERT_EQUAL(3, path[2]);
+	TEST_ASSERT_EQUAL(21, path[3]);
+	TEST_ASSERT_EQUAL(70, path[4]);
+	TEST_ASSERT_EQUAL(goal, path[5]);
+	TEST_ASSERT_EQUAL(0, path[6]);
+}
+
+void testNoShortestPath(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx start = 1;
+	const GraphNodeIdx goal = 200;
+	_Static_assert(GRAPH_SIZE >= 100,
+		       "GRAPH_SIZE needs to be >= than 100 for this test");
+
+
+	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
+
+	for (int i = 3; i < 20; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 2, i));
+	}
+
+	for (int i = 20; i < 40; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 3, i));
+	}
+
+	for (int i = 40; i < 60; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 4, i));
+	}
+
+	for (int i = 60; i < 80; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 21, i));
+	}
+
+	for (int i = 80; i < 100; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, 20, i));
+	}
+
+	/* TEST_ASSERT_TRUE(graphInsertEdge(g, 70, goal)); */
+
+
+	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+	int size = 0;
+
+	TEST_ASSERT_FALSE(graphShortestPath(g, start, goal, path, &size));
+
+	TEST_ASSERT_EQUAL(0, size);
+	for (int i = 0; i < GRAPH_SIZE; i++) {
+		TEST_ASSERT_EQUAL(0, path[i]);
+	}
+}
+
+void testShortestPathFromTwo(void)
+{
+	struct Graph *g = newGraph();
+	const GraphNodeIdx start = 1;
+	const GraphNodeIdx goal = 200;
+
+	for (int i = start; i < 100; i++) {
+		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i + 1));
+	}
+	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 101));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 2, 101));
+	TEST_ASSERT_TRUE(graphInsertEdge(g, 101, goal));
+
+	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+	int size = 0;
+
+	TEST_ASSERT_TRUE(graphShortestPath(g, start, goal, path, &size));
+
+	TEST_ASSERT_EQUAL(3, size);
+	TEST_ASSERT_EQUAL(start, path[0]);
+	TEST_ASSERT_EQUAL(101, path[1]);
+	TEST_ASSERT_EQUAL(goal, path[2]);
+	TEST_ASSERT_EQUAL(0, path[3]);
+}
+
+void testShortestPathSingleNode(void)
+{
+	struct Graph *g = newGraph();
+
+	GraphNodeIdx path[GRAPH_SIZE] = { 0 };
+	int size = 0;
+
+	TEST_ASSERT_TRUE(graphShortestPath(g, 1, 1, path, &size));
+	TEST_ASSERT_EQUAL(1, size);
+	TEST_ASSERT_EQUAL(1, path[0]);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -357,12 +529,12 @@ int main(void)
 	RUN_TEST(testDeleteNoEdge);
 	RUN_TEST(testInsertAndDelete);
 
-	/* TODO:
-	 * 10. delete and add edges randomly in succession
-	 * 11. find shortest paths on grid
-	 * 12. find shortest path on two disconnected nodes
-	 * 13. find shortest path in loop
-	 * 14. find shortest path on sequential */
+	RUN_TEST(testShortestPathLinear);
+	RUN_TEST(testShortestPathThroughHub);
+	RUN_TEST(testShortestPathThroughHub2);
+	RUN_TEST(testNoShortestPath);
+	RUN_TEST(testShortestPathFromTwo);
+	RUN_TEST(testShortestPathSingleNode);
 
 	return UNITY_END();
 }
