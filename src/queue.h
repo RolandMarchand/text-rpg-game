@@ -24,7 +24,7 @@ void queueInit(struct Queue *queue);
 bool queueIsEmpty(struct Queue *queue);
 bool queueIsFull(struct Queue *queue);
 QueueIdx queueSize(struct Queue *queue);
-void queuePush(struct Queue *queue, Idx item);
+bool queuePush(struct Queue *queue, Idx item);
 Idx queuePop(struct Queue *queue);
 Idx queuePeek(struct Queue *queue);
 struct QueueIterator queueIterate(struct Queue *queue);

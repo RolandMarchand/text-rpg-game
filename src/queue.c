@@ -35,19 +35,27 @@ QueueIdx queueSize(struct Queue *queue)
 	return (queue->back - queue->front + QUEUE_SIZE) % QUEUE_SIZE;
 }
 
-void queuePush(struct Queue *queue, Idx item)
+bool queuePush(struct Queue *queue, Idx item)
 {
 	assert(queue != NULL);
-	assert(!queueIsFull(queue));
+
+	if (queueIsFull(queue)) {
+		return false;
+	}
 
 	queue->items[queue->back] = item;
 	queue->back = (queue->back + 1) % QUEUE_SIZE;
+
+	return true;
 }
 
 Idx queuePop(struct Queue *queue)
 {
 	assert(queue != NULL);
-	assert(!queueIsEmpty(queue));
+
+	if (queueIsEmpty(queue)) {
+		return -1;
+	}
 
 	Idx item = queue->items[queue->front];
 	queue->front = (queue->front + 1) % QUEUE_SIZE;
@@ -57,7 +65,10 @@ Idx queuePop(struct Queue *queue)
 Idx queuePeek(struct Queue *queue)
 {
 	assert(queue != NULL);
-	assert(!queueIsEmpty(queue));
+
+	if (queueIsEmpty(queue)) {
+		return -1;
+	}
 
 	return queue->items[queue->front];
 }

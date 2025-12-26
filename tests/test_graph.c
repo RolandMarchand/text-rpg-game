@@ -47,12 +47,12 @@ void testInitInternal(struct Graph *g)
 
 	size_t limit = sizeof(g->nodes.head) / sizeof(GraphEdgeIdx) - 1;
 	for (size_t i = 1; i < limit; i++) {
-		TEST_ASSERT_EQUAL_UINT(i + 1, g->edges.nextEdge[i]);
+		TEST_ASSERT_EQUAL_UINT16(i + 1, g->edges.nextEdge[i]);
 	}
-	TEST_ASSERT_EQUAL_UINT(0, g->edges.nextEdge[0]);
-	TEST_ASSERT_EQUAL_UINT(0, g->edges.nextEdge[limit]);
+	TEST_ASSERT_EQUAL_UINT16(0, g->edges.nextEdge[0]);
+	TEST_ASSERT_EQUAL_UINT16(0, g->edges.nextEdge[limit]);
 
-	TEST_ASSERT_EQUAL_UINT(1, g->edges.freeListHead);
+	TEST_ASSERT_EQUAL_UINT16(1, g->edges.freeListHead);
 	TEST_ASSERT_EQUAL_UINT16(0, g->edges.count);
 }
 
@@ -81,10 +81,10 @@ void testInsertEdgeList(void)
 
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i + 1));
 
-		TEST_ASSERT_EQUAL_UINT(expectedEdge, g->nodes.head[i]);
-		TEST_ASSERT_EQUAL_UINT(i, g->edges.count);
-		TEST_ASSERT_EQUAL_UINT(i + 1, g->edges.target[i]);
-		TEST_ASSERT_EQUAL_UINT(0, g->edges.nextEdge[i]);
+		TEST_ASSERT_EQUAL_UINT16(expectedEdge, g->nodes.head[i]);
+		TEST_ASSERT_EQUAL_UINT16(i, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(i + 1, g->edges.target[i]);
+		TEST_ASSERT_EQUAL_UINT16(0, g->edges.nextEdge[i]);
 	}
 }
 
@@ -98,10 +98,10 @@ void testInsertEdgeHubOut(void)
 
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
 
-		TEST_ASSERT_EQUAL_UINT(expectedEdge, g->nodes.head[1]);
-		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
-		TEST_ASSERT_EQUAL_UINT(i, g->edges.target[expectedEdge]);
-		TEST_ASSERT_EQUAL_UINT(prevHead,
+		TEST_ASSERT_EQUAL_UINT16(expectedEdge, g->nodes.head[1]);
+		TEST_ASSERT_EQUAL_UINT16(i - 1, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(i, g->edges.target[expectedEdge]);
+		TEST_ASSERT_EQUAL_UINT16(prevHead,
 				       g->edges.nextEdge[expectedEdge]);
 	}
 }
@@ -116,10 +116,10 @@ void testInsertEdgeHubIn(void)
 
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, 1));
 
-		TEST_ASSERT_EQUAL_UINT(expectedEdge, g->nodes.head[i]);
-		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
-		TEST_ASSERT_EQUAL_UINT(1, g->edges.target[expectedEdge]);
-		TEST_ASSERT_EQUAL_UINT(prevHead,
+		TEST_ASSERT_EQUAL_UINT16(expectedEdge, g->nodes.head[i]);
+		TEST_ASSERT_EQUAL_UINT16(i - 1, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(1, g->edges.target[expectedEdge]);
+		TEST_ASSERT_EQUAL_UINT16(prevHead,
 				       g->edges.nextEdge[expectedEdge]);
 	}
 }
@@ -134,10 +134,10 @@ void testInsertEdgeLoop(void)
 
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, 1));
 
-		TEST_ASSERT_EQUAL_UINT(expectedEdge, g->nodes.head[1]);
-		TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
-		TEST_ASSERT_EQUAL_UINT(1, g->edges.target[expectedEdge]);
-		TEST_ASSERT_EQUAL_UINT(prevHead,
+		TEST_ASSERT_EQUAL_UINT16(expectedEdge, g->nodes.head[1]);
+		TEST_ASSERT_EQUAL_UINT16(i - 1, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(1, g->edges.target[expectedEdge]);
+		TEST_ASSERT_EQUAL_UINT16(prevHead,
 				       g->edges.nextEdge[expectedEdge]);
 	}
 }
@@ -148,12 +148,12 @@ void testInsertEdgeFull(void)
 
 	for (GraphEdgeIdx i = 1; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i));
-		TEST_ASSERT_EQUAL_UINT(i, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(i, g->edges.count);
 	}
 
 	for (GraphEdgeIdx i = 1; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_FALSE(graphInsertEdge(g, i, i));
-		TEST_ASSERT_EQUAL_UINT(GRAPH_SIZE - 1, g->edges.count);
+		TEST_ASSERT_EQUAL_UINT16(GRAPH_SIZE - 1, g->edges.count);
 	}
 }
 
@@ -169,13 +169,13 @@ void testIteration(void)
 	for (GraphEdgeIdx i = GRAPH_SIZE - 1; i > 1; i--) {
 		GraphNodeIdx next = 0;
 		TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
-		TEST_ASSERT_EQUAL_UINT(i, next);
+		TEST_ASSERT_EQUAL_UINT16(i, next);
 	}
 
 	for (GraphEdgeIdx i = GRAPH_SIZE - 1; i > 1; i--) {
 		GraphNodeIdx next = 0;
 		TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
-		TEST_ASSERT_EQUAL_UINT(0, next);
+		TEST_ASSERT_EQUAL_UINT16(0, next);
 	}
 }
 
@@ -193,11 +193,11 @@ void testIterationOnDeleted(void)
 	GraphNodeIdx next = 0;
 
 	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
-	TEST_ASSERT_EQUAL_UINT(5, next);
+	TEST_ASSERT_EQUAL_UINT16(5, next);
 	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
-	TEST_ASSERT_EQUAL_UINT(4, next);
+	TEST_ASSERT_EQUAL_UINT16(4, next);
 	TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
-	TEST_ASSERT_EQUAL_UINT(2, next);
+	TEST_ASSERT_EQUAL_UINT16(2, next);
 	TEST_ASSERT_FALSE(graphIteratorNext(&iter, &next));
 }
 
@@ -205,16 +205,16 @@ void testIterationWhileDeleting(void)
 {
 	struct Graph *g = newGraph();
 
-	for (int i = 2; i < GRAPH_SIZE; i++) {
+	for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
 	}
 
 	struct GraphIterator iter = graphGetNeighbors(g, 1);
 	GraphNodeIdx next = 0;
 
-	for (int i = GRAPH_SIZE - 1; i > 1; i--) {
+	for (GraphNodeIdx i = GRAPH_SIZE - 1; i > 1; i--) {
 		TEST_ASSERT_TRUE(graphIteratorNext(&iter, &next));
-		TEST_ASSERT_EQUAL_UINT(i, next);
+		TEST_ASSERT_EQUAL_UINT16(i, next);
 		TEST_ASSERT_TRUE(graphDeleteEdge(g, 1, i));
 	}
 
@@ -239,17 +239,17 @@ void testDetectAfterDelete(void)
 {
 	struct Graph *g = newGraph();
 
-	for (int i = 0; i < 10; i++) {
+	for (GraphNodeIdx i = 0; i < 10; i++) {
 		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
 			TEST_ASSERT_TRUE(graphInsertEdge(g, 1, i));
 			TEST_ASSERT_TRUE(graphHasEdge(g, 1, i));
-			TEST_ASSERT_EQUAL_UINT(i - 1, g->edges.count);
+			TEST_ASSERT_EQUAL_UINT16(i - 1, g->edges.count);
 		}
 
 		for (GraphEdgeIdx i = 2; i < GRAPH_SIZE; i++) {
 			TEST_ASSERT_TRUE(graphDeleteEdge(g, 1, i));
 			TEST_ASSERT_FALSE(graphHasEdge(g, 1, i));
-			TEST_ASSERT_EQUAL_UINT(GRAPH_SIZE - 1 - i,
+			TEST_ASSERT_EQUAL_UINT16(GRAPH_SIZE - 1 - i,
 					       g->edges.count);
 		}
 
@@ -264,12 +264,12 @@ void testDeleteNoEdge(void)
 	struct Graph *g = newGraph();
 
 	GraphEdgeIdx expectedFreeHead = g->edges.freeListHead;
-	TEST_ASSERT_EQUAL_UINT(0, g->edges.count);
+	TEST_ASSERT_EQUAL_UINT16(0, g->edges.count);
 
-	for (int i = 1; i < GRAPH_SIZE; i++) {
-		for (int j = 1; j < GRAPH_SIZE; j++) {
+	for (GraphNodeIdx i = 1; i < GRAPH_SIZE; i++) {
+		for (GraphNodeIdx j = 1; j < GRAPH_SIZE; j++) {
 			TEST_ASSERT_FALSE(graphDeleteEdge(g, i, j));
-			TEST_ASSERT_EQUAL_UINT(0, g->edges.count);
+			TEST_ASSERT_EQUAL_UINT16(0, g->edges.count);
 			TEST_ASSERT_EQUAL(expectedFreeHead,
 					  g->edges.freeListHead);
 		}
@@ -284,7 +284,7 @@ void testInsertAndDelete(void)
 	Idx expectedEdgeCount = 0;
 	char message[256] = { 0 };
 	for (int i = 0; i < 50 * GRAPH_SIZE; i++) {
-		TEST_ASSERT_LESS_THAN_UINT(GRAPH_SIZE, expectedEdgeCount);
+		TEST_ASSERT_LESS_THAN_UINT16(GRAPH_SIZE, expectedEdgeCount);
 
 		/* Promote more deletion */
 		if (i % (GRAPH_SIZE * 3) == 0) {
@@ -299,11 +299,11 @@ void testInsertAndDelete(void)
 				continue;
 			}
 
-			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+			TEST_ASSERT_EQUAL_UINT16(expectedEdgeCount,
 					       g->edges.count);
 			TEST_ASSERT_FALSE(graphDeleteEdge(g, from, to));
 
-			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+			TEST_ASSERT_EQUAL_UINT16(expectedEdgeCount,
 					       g->edges.count);
 
 			TEST_ASSERT_LESS_OR_EQUAL(
@@ -316,16 +316,16 @@ void testInsertAndDelete(void)
 						 message);
 
 			expectedEdgeCount++;
-			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+			TEST_ASSERT_EQUAL_UINT16(expectedEdgeCount,
 					       g->edges.count);
 		} else { /* Delete */
-			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+			TEST_ASSERT_EQUAL_UINT16(expectedEdgeCount,
 					       g->edges.count);
 
 			TEST_ASSERT_TRUE(graphDeleteEdge(g, from, to));
 
 			expectedEdgeCount--;
-			TEST_ASSERT_EQUAL_UINT(expectedEdgeCount,
+			TEST_ASSERT_EQUAL_UINT16(expectedEdgeCount,
 					       g->edges.count);
 		}
 	}
@@ -336,7 +336,7 @@ void testDeleteNode(void)
 	struct Graph *g = newGraph();
 	const GraphNodeIdx toDelete = 2;
 
-	for (int i = 0; i < 100; i++) {
+	for (GraphNodeIdx i = 0; i < 100; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 1, toDelete));
 		TEST_ASSERT_TRUE(graphInsertEdge(g, toDelete, 1));
 		TEST_ASSERT_EQUAL((i + 1) * 2, g->edges.count);
@@ -353,11 +353,11 @@ void testDeleteNodeWithMultipleNeighbors(void)
 	struct Graph *g = newGraph();
 	const GraphNodeIdx toDelete = 50;
 
-	for (int i = 1; i < 20; i++) {
+	for (GraphNodeIdx i = 1; i < 20; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, toDelete));
 	}
 
-	for (int i = 51; i < 70; i++) {
+	for (GraphNodeIdx i = 51; i < 70; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, toDelete, i));
 	}
 
@@ -369,7 +369,7 @@ void testDeleteNodeWithMultipleNeighbors(void)
 	TEST_ASSERT_EQUAL(0, g->edges.count);
 	TEST_ASSERT_EQUAL(0, g->nodes.head[toDelete]);
 
-	for (int i = 1; i < 20; i++) {
+	for (GraphNodeIdx i = 1; i < 20; i++) {
 		TEST_ASSERT_FALSE(graphHasEdge(g, i, toDelete));
 	}
 }
@@ -377,14 +377,14 @@ void testDeleteNodeWithMultipleNeighbors(void)
 void testShortestPathLinear(void)
 {
 	struct Graph *g = newGraph();
-	for (int i = 1; i < GRAPH_SIZE - 1; i++) {
+	for (GraphNodeIdx i = 1; i < GRAPH_SIZE - 1; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i + 1));
 		GraphNodeIdx path[GRAPH_SIZE] = { 0 };
 		int pathSize = 0;
 		TEST_ASSERT_TRUE(
 			graphShortestPath(g, 1, i + 1, path, &pathSize));
 		TEST_ASSERT_EQUAL(i + 1, pathSize);
-		for (int j = 0; j < pathSize; j++) {
+		for (GraphNodeIdx j = 0; j < pathSize; j++) {
 			TEST_ASSERT_EQUAL(j + 1, path[j]);
 		}
 	}
@@ -400,7 +400,7 @@ void testShortestPathThroughHub(void)
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, hub));
 	TEST_ASSERT_TRUE(graphInsertEdge(g, hub, goal));
 
-	for (int i = 3; i < GRAPH_SIZE - 3; i++) {
+	for (GraphNodeIdx i = 3; i < GRAPH_SIZE - 3; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, hub, i));
 	}
 
@@ -425,23 +425,23 @@ void testShortestPathThroughHub2(void)
 
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
 
-	for (int i = 3; i < 20; i++) {
+	for (GraphNodeIdx i = 3; i < 20; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 2, i));
 	}
 
-	for (int i = 20; i < 40; i++) {
+	for (GraphNodeIdx i = 20; i < 40; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 3, i));
 	}
 
-	for (int i = 40; i < 60; i++) {
+	for (GraphNodeIdx i = 40; i < 60; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 4, i));
 	}
 
-	for (int i = 60; i < 80; i++) {
+	for (GraphNodeIdx i = 60; i < 80; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 21, i));
 	}
 
-	for (int i = 80; i < 100; i++) {
+	for (GraphNodeIdx i = 80; i < 100; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 20, i));
 	}
 
@@ -472,23 +472,23 @@ void testNoShortestPath(void)
 
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 2));
 
-	for (int i = 3; i < 20; i++) {
+	for (GraphNodeIdx i = 3; i < 20; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 2, i));
 	}
 
-	for (int i = 20; i < 40; i++) {
+	for (GraphNodeIdx i = 20; i < 40; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 3, i));
 	}
 
-	for (int i = 40; i < 60; i++) {
+	for (GraphNodeIdx i = 40; i < 60; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 4, i));
 	}
 
-	for (int i = 60; i < 80; i++) {
+	for (GraphNodeIdx i = 60; i < 80; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 21, i));
 	}
 
-	for (int i = 80; i < 100; i++) {
+	for (GraphNodeIdx i = 80; i < 100; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, 20, i));
 	}
 
@@ -500,7 +500,7 @@ void testNoShortestPath(void)
 	TEST_ASSERT_FALSE(graphShortestPath(g, start, goal, path, &size));
 
 	TEST_ASSERT_EQUAL(0, size);
-	for (int i = 0; i < GRAPH_SIZE; i++) {
+	for (GraphNodeIdx i = 0; i < GRAPH_SIZE; i++) {
 		TEST_ASSERT_EQUAL(0, path[i]);
 	}
 }
@@ -511,7 +511,7 @@ void testShortestPathFromTwo(void)
 	const GraphNodeIdx start = 1;
 	const GraphNodeIdx goal = 200;
 
-	for (int i = start; i < 100; i++) {
+	for (GraphNodeIdx i = start; i < 100; i++) {
 		TEST_ASSERT_TRUE(graphInsertEdge(g, i, i + 1));
 	}
 	TEST_ASSERT_TRUE(graphInsertEdge(g, start, 101));
