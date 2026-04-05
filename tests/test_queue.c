@@ -350,7 +350,7 @@ void testAlternatingPushPop(void)
 	for (Idx i = 1; i <= 100; i++) {
 		TEST_ASSERT_TRUE(queuePush(q, i));
 		TEST_ASSERT_EQUAL_UINT16(1, queueSize(q));
-		
+
 		Idx item = queuePop(q);
 		TEST_ASSERT_EQUAL_UINT16(i, item);
 		TEST_ASSERT_EQUAL_UINT16(0, queueSize(q));

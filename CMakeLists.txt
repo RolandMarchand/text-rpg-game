@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror=vla")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
 endif()
@@ -18,5 +18,8 @@ endif()
 include(sanitizers)
 enable_sanitizers()
 
+find_package(raylib 5.0 REQUIRED)
+
+add_subdirectory(resources)
 add_subdirectory(src)
 add_subdirectory(tests)

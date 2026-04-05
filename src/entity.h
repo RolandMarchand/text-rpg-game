@@ -2,12 +2,12 @@
 
 #include <stdint.h>
 
-#include "const.h"
+#include "common.h"
 
 #define MAX_ENTITIES MAX_DEFAULT
 
-typedef uint16_t EntityIdx;
-typedef uint8_t EntityType;
+typedef u16 EntityIdx;
+typedef u8 EntityType;
 
 enum {
 	TYPE_NONE = 0,
@@ -21,8 +21,8 @@ enum {
 	TYPE_CELESTIAL = 1 << 7,
 };
 
-_Static_assert((TYPE_BEAST | TYPE_UNDEAD | TYPE_DEMON | TYPE_ELEMENTAL | 
-                TYPE_FUNGUS | TYPE_HUMAN | TYPE_KOBOLD | TYPE_CELESTIAL) <= UINT8_MAX, 
+_Static_assert((TYPE_BEAST | TYPE_UNDEAD | TYPE_DEMON | TYPE_ELEMENTAL |
+                TYPE_FUNGUS | TYPE_HUMAN | TYPE_KOBOLD | TYPE_CELESTIAL) <= UINT8_MAX,
                "EntityType flags exceed uint8_t range");
 
 struct EntityComponents {
