@@ -2,6 +2,13 @@ include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_subdirectory(obstack)
 
+# Run with `cmake --target run` to not have lsan yell about Raylib memory leaks
+file(WRITE "${CMAKE_BINARY_DIR}/lsan_suppressions.txt" "leak:InitWindow\n")
+add_custom_target(run
+  COMMAND LSAN_OPTIONS=suppressions=${CMAKE_BINARY_DIR}/lsan_suppressions.txt ./${PROJECT_NAME}
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
 add_executable(${PROJECT_NAME}
   main.c
   graph.c
