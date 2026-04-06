@@ -34,13 +34,22 @@ bool graphInsertEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to);
 /* Return whether it was found and deleted */
 bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to);
 void graphDeleteNode(struct Graph *graph, GraphNodeIdx node);
-bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from,
-		  GraphNodeIdx to);
-struct GraphIterator graphGetNeighbors(const struct Graph *graph,
-				       GraphNodeIdx node);
+bool graphHasEdge(
+	const struct Graph *graph,
+	GraphNodeIdx from,
+	GraphNodeIdx to
+);
+struct GraphIterator graphGetNeighbors(
+	const struct Graph *graph,
+	GraphNodeIdx node
+);
 bool graphIteratorNext(struct GraphIterator *iter, GraphNodeIdx *out);
 
 /* Path finding */
-bool graphShortestPath(const struct Graph *graph, GraphNodeIdx start,
-		       GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE],
-		       int *outPathSize);
+bool graphShortestPath(
+	const struct Graph *graph,
+	GraphNodeIdx start,
+	GraphNodeIdx goal,
+	GraphNodeIdx outPath[GRAPH_SIZE],
+	int *outPathSize
+);

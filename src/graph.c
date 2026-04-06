@@ -108,7 +108,11 @@ bool graphDeleteEdge(struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 	return false;
 }
 
-bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
+bool graphHasEdge(
+	const struct Graph *graph,
+	GraphNodeIdx from,
+	GraphNodeIdx to
+)
 {
 	assert(graph != NULL);
 	assert(from > 0 && from < GRAPH_SIZE);
@@ -125,8 +129,10 @@ bool graphHasEdge(const struct Graph *graph, GraphNodeIdx from, GraphNodeIdx to)
 	return false;
 }
 
-struct GraphIterator graphGetNeighbors(const struct Graph *graph,
-				       GraphNodeIdx node)
+struct GraphIterator graphGetNeighbors(
+	const struct Graph *graph,
+	GraphNodeIdx node
+)
 {
 	assert(graph != NULL);
 	assert(node > 0 && node < GRAPH_SIZE);
@@ -156,9 +162,12 @@ bool graphIteratorNext(struct GraphIterator *iter, GraphNodeIdx *out)
 	return true;
 }
 
-static void graphVisitNeighbors(const struct Graph *graph, struct Queue *queue,
-				GraphNodeIdx current,
-				GraphNodeIdx parent[GRAPH_SIZE])
+static void graphVisitNeighbors(
+	const struct Graph *graph,
+	struct Queue *queue,
+	GraphNodeIdx current,
+	GraphNodeIdx parent[GRAPH_SIZE]
+)
 {
 	struct GraphIterator iter = graphGetNeighbors(graph, current);
 	GraphNodeIdx neighbor;
@@ -179,8 +188,12 @@ static void reversePath(GraphNodeIdx outPath[GRAPH_SIZE], int outPathSize)
 	}
 }
 
-static int reconstructPath(GraphNodeIdx parent[GRAPH_SIZE], GraphNodeIdx start,
-			   GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE])
+static int reconstructPath(
+	GraphNodeIdx parent[GRAPH_SIZE],
+	GraphNodeIdx start,
+	GraphNodeIdx goal,
+	GraphNodeIdx outPath[GRAPH_SIZE]
+)
 {
 	int size = 0;
 	GraphNodeIdx node = goal;
@@ -204,9 +217,13 @@ static int reconstructPath(GraphNodeIdx parent[GRAPH_SIZE], GraphNodeIdx start,
 	return size;
 }
 
-bool graphShortestPath(const struct Graph *graph, GraphNodeIdx start,
-		       GraphNodeIdx goal, GraphNodeIdx outPath[GRAPH_SIZE],
-		       int *outPathSize)
+bool graphShortestPath(
+	const struct Graph *graph,
+	GraphNodeIdx start,
+	GraphNodeIdx goal,
+	GraphNodeIdx outPath[GRAPH_SIZE],
+	int *outPathSize
+)
 {
 	assert(graph != NULL);
 	assert(start > 0 && start < GRAPH_SIZE);
