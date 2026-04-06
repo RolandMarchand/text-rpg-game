@@ -15,9 +15,6 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
 endif()
 
-include(sanitizers)
-enable_sanitizers()
-
 find_package(raylib 5.0 REQUIRED)
 
 add_subdirectory(resources)

@@ -7,10 +7,7 @@
 #include "const.h"
 #include "errors.h"
 #include "config.h"
-
-#include "obstack/obstack.h"
-#define obstack_chunk_alloc malloc
-#define obstack_chunk_free free
+#include "obstack/arena.h"
 
 typedef u16 Idx;
 typedef Error(*Step)(void);

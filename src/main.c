@@ -5,17 +5,23 @@
 
 #define LAZ_UTILS_IMPLEMENTATION
 #include "laz_utils.h"
+
 #include "common.h"
 #include "view.h"
+#include "list/list.h"
 
-static struct obstack arena;
 /* When true, exit at the end of the current frame */
 bool shouldExitGameLoop = false;
 
 Error init(void)
 {
+	/* Memory allocators */
+	initListPool();
+	initArena();
+
+	/* Components */
 	initView();
-	obstack_init(&arena);
+
 	return ERR_OK;
 }
 
@@ -39,8 +45,13 @@ Error gameLoop(void)
 
 Error cleanup(void)
 {
-	obstack_free(&arena, NULL);
+	/* Components */
 	cleanupView();
+
+	/* Memory allocators */
+	cleanupArena();
+	cleanupListPool();
+
 	return ERR_OK;
 }
 
