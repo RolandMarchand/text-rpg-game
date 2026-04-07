@@ -4,19 +4,20 @@
 
 #define CLAY_IMPLEMENTATION
 #include "clay/clay.h"
-#include "clay/clay_renderer_raylib.c"
+#include "clay/layout.c"
 
 #define CLAY_CSTRING(str) (Clay_String) { .length = strlen(str), .chars = str }
 #define RAYLIB_VECTOR2_TO_CLAY_VECTOR2(vector)\
 	(Clay_Vector2) { .x = vector.x, .y = vector.y }
-#define COLOR_ORANGE (Clay_Color) {225, 138, 50, 255}
-#define COLOR_BLUE (Clay_Color) {111, 173, 162, 255}
 
 enum {
 	SCREEN_WIDTH = 800,
 	SCREEN_HEIGHT = 450,
-	FONT_ID_BODY_24 = 0,
-	FONT_ID_BODY_16 = 1,
+};
+
+enum {
+	TEXTURE_PROFILE = 0,
+	TEXTURE_MAX,
 };
 
 typedef struct ScrollBarData {
@@ -28,28 +29,11 @@ typedef struct ScrollBarData {
 static u32 clayMemorySize;
 static Clay_Arena clayMemory;
 static bool mustReinitializeClay;
-static Font fonts[2];
+static Font fonts[FONT_ID_MAX];
+static Texture2D textures[TEXTURE_MAX];
 static bool debugEnabled;
 static ScrollbarData scrollbarData;
-static Clay_LayoutConfig dropdownTextItemLayout = { .padding = {8, 8, 4, 4} };
-static Clay_TextElementConfig dropdownTextElementConfig = {
-	.fontSize = 24,
-	.textColor = {255,255,255,255}
-};
-static Texture2D profilePicture;
-static Clay_String profileText = CLAY_STRING_CONST("Profile Page one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen");
-static Clay_TextElementConfig headerTextConfig = {
-	.fontId = 1,
-	.letterSpacing = 5,
-	.fontSize = 16,
-	.textColor = {0,0,0,255}
-};
 static ListString *messages;
-static const Clay_TextElementConfig messageConfig = {
-	.fontSize = 16,
-	.fontId = FONT_ID_BODY_24,
-	.textColor = {0, 0, 0, 255}
-};
 
 static void HandleClayErrors(Clay_ErrorData errorData) {
 	errorf("%s", errorData.errorText.chars);
@@ -115,9 +99,18 @@ static Error initFonts(void)
 
 static Error initTextures(void)
 {
-	profilePicture = LoadTexture(RESOURCES_DIR "/profile-picture.png");
-	if (!IsTextureValid(profilePicture)) {
-		return ERR_RESOURCE_LOADING_FAILED;
+	const char *texturePaths[TEXTURE_MAX] = {
+		[TEXTURE_PROFILE] = RESOURCES_DIR "/profile-picture.png"
+	};
+
+	for (size_t i = 0; i < ARRAY_LENGTH(textures); i++) {
+		textures[i] = LoadTexture(texturePaths[i]);
+		if (!IsTextureValid(textures[i])) {
+			for (size_t j = 0; j < i; j++) {
+				UnloadTexture(textures[j]);
+			}
+			return ERR_RESOURCE_LOADING_FAILED;
+		}
 	}
 
 	return ERR_OK;
@@ -126,9 +119,16 @@ static Error initTextures(void)
 Error initView(void)
 {
 	messages = (ListString*)newList();
+	list_string_push(messages, duplicateString("lmao0"));
 	list_string_push(messages, duplicateString("lmao1"));
 	list_string_push(messages, duplicateString("lmao2"));
 	list_string_push(messages, duplicateString("lmao3"));
+	list_string_push(messages, duplicateString("lmao4"));
+	list_string_push(messages, duplicateString("lmao5"));
+	list_string_push(messages, duplicateString("lmao6"));
+	list_string_push(messages, duplicateString("lmao7"));
+	list_string_push(messages, duplicateString("lmao8"));
+	list_string_push(messages, duplicateString("lmao9"));
 
 	Step steps[] = {
 		initViewClay,
@@ -237,48 +237,40 @@ static void updateScrollContainers(Clay_Vector2 mousePosition)
 	}
 }
 
-static void RenderDropdownTextItem(int index) {
-	(void)index;
-	CLAY_AUTO_ID({ .layout = dropdownTextItemLayout, .backgroundColor = {180, 180, 180, 255} }) {
-		CLAY_TEXT(CLAY_STRING("I'm a text field in a scroll container."), dropdownTextElementConfig);
+static void createScrollBar(void)
+{
+	Clay_ScrollContainerData scrollData = Clay_GetScrollContainerData(
+		Clay_GetElementId(CLAY_STRING("MainContent")));
+
+	if (!scrollData.found) {
+		return;
+	}
+
+	Clay_ElementDeclaration scrollBar
+		= getScrollBar(CLAY_STRING("MainContent"), scrollData);
+	Clay_ElementDeclaration scrollBarButton
+		= getScrollBarButton(CLAY_STRING("ScrollBar"), scrollData);
+
+	CLAY(CLAY_ID("ScrollBar"), scrollBar) {
+                CLAY(CLAY_ID("ScrollBarButton"), scrollBarButton) {}
 	}
 }
 
-static Clay_ElementDeclaration HeaderButtonStyle(bool hovered) {
-    return (Clay_ElementDeclaration) {
-        .layout = {.padding = {16, 16, 8, 8}},
-        .backgroundColor = hovered ? COLOR_ORANGE : COLOR_BLUE,
-    };
-}
-
-static void RenderHeaderButton(Clay_String text) {
-    CLAY_AUTO_ID(HeaderButtonStyle(Clay_Hovered())) {
-        CLAY_TEXT(text, CLAY_TEXT_CONFIG(headerTextConfig));
-    }
-}
-
-static Clay_RenderCommandArray CreateLayout(void)
+static Clay_RenderCommandArray createLayout(void)
 {
 	Clay_BeginLayout();
 
-	CLAY(CLAY_ID("Container"), {
-			.layout = {
-				.layoutDirection = CLAY_TOP_TO_BOTTOM,
-				.padding = CLAY_PADDING_ALL(8),
-				.childGap = 16,
-				.sizing = {
-					.width = CLAY_SIZING_GROW(0),
-					.height = CLAY_SIZING_GROW(0)
-				}
-			},
-			.backgroundColor = {200, 200, 200, 255}
-		}) {
-		for (char **str = messages->begin; str < messages->end; str++) {
-			char *string = *str;
-			CLAY_TEXT(CLAY_CSTRING(string), messageConfig);
+	CLAY(CLAY_ID("Body"), getBodyConfig()) {
+		CLAY(CLAY_ID("MainContent"), getMainContent()) {
+			for (char **str = messages->begin; str < messages->end; str++) {
+				char *string = *str;
+				CLAY_TEXT(CLAY_CSTRING(string), getFontBodyConfig());
+			}
 		}
-
 	}
+
+	createScrollBar();
+
 
 	return Clay_EndLayout(GetFrameTime());
 }
@@ -303,7 +295,7 @@ static void updateDrawFrame(void)
 		true,
 		(Clay_Vector2) {mouseWheelX, mouseWheelY}, GetFrameTime());
 
-	Clay_RenderCommandArray renderCommands = CreateLayout();
+	Clay_RenderCommandArray renderCommands = createLayout();
 
 	/* Rendering */
 	BeginDrawing(); {
@@ -336,7 +328,9 @@ Error cleanupView(void)
 	}
 
 	/* Textures */
-	UnloadTexture(profilePicture);
+	for (size_t i = 0; i < ARRAY_LENGTH(textures); i++) {
+		UnloadTexture(textures[i]);
+	}
 
 	Clay_Raylib_Close();
 

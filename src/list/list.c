@@ -31,8 +31,6 @@ void initListPool(void) {
 }
 
 List *newList(void) {
-	printf("+1\n");
-	fflush(stdout);
 	bool outOfSpace = freeListPoolHead == POOL_END;
 	assert(!outOfSpace);
 	if (outOfSpace) {
@@ -67,8 +65,6 @@ void freeList(List *list) {
 		return;
 	}
 
-	printf("-1\n");
-	fflush(stdout);
 	listPool.nextFree[idx] = freeListPoolHead;
 	listPool.allocated[idx] = false;
 	freeListPoolHead = idx;
@@ -78,8 +74,6 @@ void cleanupListPool(void)
 {
 	for (size_t i = 0; i < POOL_SIZE; i++) {
 		if (listPool.allocated[i]) {
-			printf("-1\n");
-			fflush(stdout);
 			list_free(&listPool.lists[i]);
 		}
 	}
