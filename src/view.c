@@ -93,24 +93,20 @@ static Error initViewClay(void)
 
 static Error initFonts(void)
 {
-	fonts[FONT_ID_BODY_24]
-		= LoadFontEx(RESOURCES_DIR "/Roboto-Regular.ttf", 48, 0, 400);
-	if (!IsFontValid(fonts[FONT_ID_BODY_24])) {
-		return ERR_RESOURCE_LOADING_FAILED;
-	}
-	SetTextureFilter(
-		fonts[FONT_ID_BODY_24].texture,
-		TEXTURE_FILTER_BILINEAR);
+	fonts[FONT_ID_BODY_24] = LoadFontEx(
+		RESOURCES_DIR "/CrimsonText-Regular.ttf", 48, 0, 718);
+	fonts[FONT_ID_BODY_16] = LoadFontEx(
+		RESOURCES_DIR "/CrimsonText-Regular.ttf", 32, 0, 718);
 
-	fonts[FONT_ID_BODY_16]
-		= LoadFontEx(RESOURCES_DIR "/Roboto-Regular.ttf", 32, 0, 400);
-	if (!IsFontValid(fonts[FONT_ID_BODY_16])) {
-		/* TODO: unload fonts when loading fails */
-		return ERR_RESOURCE_LOADING_FAILED;
+	for (size_t i = 0; i < ARRAY_LENGTH(fonts); i++) {
+		if (!IsFontValid(fonts[i])) {
+			for (size_t j = 0; j < i; j++) {
+				UnloadFont(fonts[j]);
+			}
+			return ERR_RESOURCE_LOADING_FAILED;
+		}
+		SetTextureFilter(fonts[i].texture, TEXTURE_FILTER_BILINEAR);
 	}
-	SetTextureFilter(
-		fonts[FONT_ID_BODY_16].texture,
-		TEXTURE_FILTER_BILINEAR);
 
 	Clay_SetMeasureTextFunction(Raylib_MeasureText, fonts);
 
