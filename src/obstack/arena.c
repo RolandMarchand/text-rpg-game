@@ -24,3 +24,8 @@ char *duplicateString(const char *str)
 
 	return obstack_copy0(&arena, str, strlen(str));
 }
+
+void *arenaAlloc(size_t size)
+{
+	return obstack_alloc(&arena, size);
+}

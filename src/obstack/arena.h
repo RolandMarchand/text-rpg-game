@@ -12,3 +12,4 @@ extern struct obstack arena;
 Error initArena(void);
 Error cleanupArena(void);
 char *duplicateString(const char *str);
+void *arenaAlloc(size_t size);

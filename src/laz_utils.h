@@ -4,6 +4,10 @@
  * Single-header C library for C99 development.
  * Use `#define LAZ_UTILS_IMPLEMENTATION` before using. */
 
+#if !defined(__STDC_VERSION__) && !defined(_MSC_VER) && __cplusplus < 201103L /* <C++11 */
+#error "This library only supports >=C99 and >=C++11"
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -27,9 +31,24 @@
 #endif
 
 #ifdef __cplusplus
+#define LAZ_NORETURN [[noreturn]]
 #define LAZ_RESTRICT
 #define LAZ_INIT { }
-#else
+#elif __STDC_VERSION__ >= 202311L /* C23 */
+#define LAZ_NORETURN [[noreturn]]
+#define LAZ_RESTRICT restrict
+#define LAZ_INIT { }
+#elif __STDC_VERSION__ >= 201112L /* C11 */
+#include <stdnoreturn.h>
+#define LAZ_NORETURN noreturn
+#define LAZ_RESTRICT restrict
+#define LAZ_INIT { 0 }
+#elif _MSC_VER
+#define LAZ_NORETURN __declspec(noreturn)
+#define LAZ_RESTRICT restrict
+#define LAZ_INIT { 0 }
+#else /* C99 */
+#define LAZ_NORETURN
 #define LAZ_RESTRICT restrict
 #define LAZ_INIT { 0 }
 #endif
@@ -43,8 +62,13 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
+/* C11+ only stuff */
+#if __STDC_VERSION__ >= 201112L
 u64 get_nanoseconds(void);
+#endif
+
 int errorf(const char *LAZ_RESTRICT format, ...);
+LAZ_NORETURN void panicf(const char *LAZ_RESTRICT format, ...);
 /* Can only read files <2GiB. Reading files >=2GiB is undefined behavior. When
  * `out` is null, return the size of the buffer to allocate, including null
  * term. Otherwise, write to `out` and return the amount of bytes written,
@@ -58,15 +82,19 @@ u64 fnv1a_64_str(const char *str);
 void *malloc_try(size_t size);
 void *calloc_try(size_t n, size_t size);
 void *realloc_try(void *ptr, size_t size);
+#if defined(_DEFAULT_SOURCE) || defined(_GNU_SOURCE) /* GNU C */
 void *reallocarray_try(void *ptr, size_t n, size_t size);
+#endif
 
 #ifdef LAZ_UTILS_IMPLEMENTATION
 
+#if __STDC_VERSION__ >= 201112L /* >=C11 */
 u64 get_nanoseconds(void) {
 	struct timespec ts = LAZ_INIT;
 	timespec_get(&ts, TIME_UTC);
 	return (u64)ts.tv_sec * 1000000000ULL + (u64)ts.tv_nsec;
 }
+#endif
 
 int errorf(const char *LAZ_RESTRICT format, ...)
 {
@@ -77,6 +105,18 @@ int errorf(const char *LAZ_RESTRICT format, ...)
 
 	va_end(args);
 	return ret;
+}
+
+LAZ_NORETURN void panicf(const char *LAZ_RESTRICT format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	(void)vfprintf(stderr, format, args);
+	fflush(stderr);
+
+	va_end(args);
+	abort();
 }
 
 long int load_file(const char *path, char *out)
@@ -253,6 +293,7 @@ void *realloc_try(void *ptr, size_t size)
 	return mem;
 }
 
+#if defined(_DEFAULT_SOURCE) || defined(_GNU_SOURCE)
 void *reallocarray_try(void *ptr, size_t n, size_t size)
 {
 	void *mem = reallocarray(ptr, n, size);
@@ -264,7 +305,9 @@ void *reallocarray_try(void *ptr, size_t n, size_t size)
 
 	return mem;
 }
+#endif
 
 #undef LAZ_RESTRICT
 #undef LAZ_INIT
+#undef LAZ_NORETURN
 #endif /* LAZ_UTILS_IMPLEMENTATION */
