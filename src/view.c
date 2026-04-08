@@ -34,6 +34,7 @@ static Texture2D textures[TEXTURE_MAX];
 static bool debugEnabled;
 static ScrollbarData scrollbarData;
 static ListString *messages;
+static ListString *actions;
 
 static void HandleClayErrors(Clay_ErrorData errorData) {
 	errorf("%s", errorData.errorText.chars);
@@ -119,16 +120,21 @@ static Error initTextures(void)
 Error initView(void)
 {
 	messages = (ListString*)newList();
-	list_string_push(messages, duplicateString("lmao0"));
-	list_string_push(messages, duplicateString("lmao1"));
-	list_string_push(messages, duplicateString("lmao2"));
-	list_string_push(messages, duplicateString("lmao3"));
-	list_string_push(messages, duplicateString("lmao4"));
-	list_string_push(messages, duplicateString("lmao5"));
-	list_string_push(messages, duplicateString("lmao6"));
-	list_string_push(messages, duplicateString("lmao7"));
-	list_string_push(messages, duplicateString("lmao8"));
-	list_string_push(messages, duplicateString("lmao9"));
+	list_string_push(messages, "lmao0");
+	list_string_push(messages, "lmao1");
+	list_string_push(messages, "lmao2");
+	list_string_push(messages, "lmao3");
+	list_string_push(messages, "lmao4");
+	list_string_push(messages, "lmao5");
+	list_string_push(messages, "lmao6");
+	list_string_push(messages, "lmao7");
+	list_string_push(messages, "lmao8");
+	list_string_push(messages, "lmao9");
+
+	actions = (ListString*)newList();
+	list_string_push(actions, "Eat");
+	list_string_push(actions, "Slap");
+	list_string_push(actions, "Sleep");
 
 	Step steps[] = {
 		initViewClay,
@@ -256,21 +262,40 @@ static void createScrollBar(void)
 	}
 }
 
+static void clickAction(size_t index)
+{
+	list_string_push(messages, list_string_get(actions, index));
+}
+
 static Clay_RenderCommandArray createLayout(void)
 {
 	Clay_BeginLayout();
 
-	CLAY(CLAY_ID("Body"), getBodyConfig()) {
+	CLAY(CLAY_ID("Body"), getBody()) {
 		CLAY(CLAY_ID("MainContent"), getMainContent()) {
 			for (char **str = messages->begin; str < messages->end; str++) {
 				char *string = *str;
-				CLAY_TEXT(CLAY_CSTRING(string), getFontBodyConfig());
+				CLAY_TEXT(CLAY_CSTRING(string), getFontBody());
+			}
+		}
+
+		CLAY(CLAY_ID("ActionSection"), getActionSection()) {
+			for (size_t i = 0; i < VECTOR_SIZE(actions); i++) {
+				Clay_ElementId id = CLAY_IDI("Action", i);
+				bool hovered = false;
+				CLAY(id, getActionButton(&hovered)) {
+					if (hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+						clickAction(i);
+					}
+					char *action = list_string_get(actions, i);
+					CLAY_TEXT(getActionOrderString(i + 1), getFontAction());
+					CLAY_TEXT(CLAY_CSTRING(action), getFontBody());
+				}
 			}
 		}
 	}
 
 	createScrollBar();
-
 
 	return Clay_EndLayout(GetFrameTime());
 }
@@ -314,6 +339,8 @@ Error updateView(void)
 	if (mustReinitializeClay) {
 		reinitializeClay();
         }
+
+	SetMouseCursor(MOUSE_CURSOR_DEFAULT);
 
         updateDrawFrame();
 
