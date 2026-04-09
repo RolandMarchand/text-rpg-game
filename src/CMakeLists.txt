@@ -22,6 +22,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   $<$<C_COMPILER_ID:MSVC>:/W4> # math
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
+target_compile_options(${PROJECT_NAME} PRIVATE
+  $<$<C_COMPILER_ID:MSVC>:/W4>
+  $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic>
+)
 
 # Needed for Raylib
 if (APPLE)
