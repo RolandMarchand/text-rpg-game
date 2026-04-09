@@ -19,7 +19,7 @@ set_target_properties(${PROJECT_NAME}
   PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE
   raylib
-  m
+  $<$<C_COMPILER_ID:MSVC>:/W4> # math
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 
